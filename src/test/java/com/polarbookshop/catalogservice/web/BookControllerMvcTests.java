@@ -1,0 +1,68 @@
+package com.polarbookshop.catalogservice.web;
+
+import com.polarbookshop.catalogservice.domain.BookAlreadyExistsException;
+import com.polarbookshop.catalogservice.domain.BookNotFoundException;
+import com.polarbookshop.catalogservice.domain.BookService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(BookController.class)
+class BookControllerMvcTests {
+
+  @Autowired
+  private MockMvc mockMvc;
+
+  @MockitoBean
+  private BookService bookService;
+
+  @Test
+  void whenGetBookNotExistingThenShouldReturn404() throws Exception {
+    String isbn = "7373731394";
+    given(bookService.viewBookDetails(isbn))
+        .willThrow(BookNotFoundException.class);
+
+    mockMvc.perform(get("/books/" + isbn))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void whenPostBookAlreadyExistingThenShouldReturn422() throws Exception {
+    String isbn = "7373731394";
+    given(bookService.addBookToCatalog(any()))
+        .willThrow(new BookAlreadyExistsException(isbn));
+
+    mockMvc.perform(post("/books")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {"isbn": "7373731394", "title": "Title", "author": "Author", "price": 9.90}
+                """))
+        .andExpect(status().isUnprocessableEntity());
+  }
+
+  @Test
+  void whenPostBookInvalidThenShouldReturn400() throws Exception {
+    mockMvc.perform(post("/books")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {"isbn": "123ABC456Z", "title": "", "author": "Author", "price": 9.90}
+                """))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.isbn").value("The ISBN format must be valid."))
+        .andExpect(jsonPath("$.title").value("The book title must be defined."));
+
+    verify(bookService, never()).addBookToCatalog(any());
+  }
+}

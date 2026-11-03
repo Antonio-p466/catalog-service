@@ -15,6 +15,10 @@ public class BookService {
     return bookRepository.findAll();
   }
 
+  public boolean isInCatalog(String isbn) {
+    return bookRepository.existsByIsbn(isbn);
+  }
+
   public Book viewBookDetails(String isbn) {
     return bookRepository.findByIsbn(isbn)
         .orElseThrow(() -> new BookNotFoundException(isbn));

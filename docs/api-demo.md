@@ -1,6 +1,6 @@
 API demo
 
-i ran the app with ./gradlew bootRun on port 9001 and tried every status code from table 1 with curl. the only one not here is 201 on PUT, thats exercise E1 and it gets fixed later. i cut out the Date and Keep-Alive lines from the responses.
+i ran the app with ./gradlew bootRun on port 9001 and tried every status code from table 1 with curl. 201 on PUT is at the bottom, i added it after fixing it in exercise E1. i cut out the Date and Keep-Alive lines from the responses.
 
 first i listed the books. nothing there yet so its an empty list and 200.
 
@@ -81,3 +81,19 @@ asked for it again after deleting and its gone, 404.
     Content-Length: 44
 
     The book with ISBN 1234567891 was not found.
+
+after E1, PUT on an isbn that isnt there yet makes the book and gives 201.
+
+    $ curl -i -X PUT localhost:9001/books/1111111111 -H 'Content-Type: application/json' -d '{"isbn":"1111111111","title":"Polar Journey","author":"Iorek Byrnison","price":15.00}'
+    HTTP/1.1 201 
+    Content-Type: application/json
+
+    {"isbn":"1111111111","title":"Polar Journey","author":"Iorek Byrnison","price":15.0}
+
+sending PUT on the same isbn again just updates it, so its 200 this time.
+
+    $ curl -i -X PUT localhost:9001/books/1111111111 -H 'Content-Type: application/json' -d '{"isbn":"1111111111","title":"Polar Journey","author":"Iorek Byrnison","price":17.00}'
+    HTTP/1.1 200 
+    Content-Type: application/json
+
+    {"isbn":"1111111111","title":"Polar Journey","author":"Iorek Byrnison","price":17.0}

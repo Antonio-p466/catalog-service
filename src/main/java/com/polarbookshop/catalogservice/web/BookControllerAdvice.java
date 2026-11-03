@@ -27,6 +27,12 @@ public class BookControllerAdvice {
     return ex.getMessage();
   }
 
+  @ExceptionHandler(IsbnMismatchException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  String isbnMismatchHandler(IsbnMismatchException ex) {
+    return ex.getMessage();
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {

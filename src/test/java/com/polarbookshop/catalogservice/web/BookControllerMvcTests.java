@@ -18,6 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -98,5 +99,18 @@ class BookControllerMvcTests {
                 """))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.isbn").value(isbn));
+  }
+
+  @Test
+  void whenPutIsbnInPathAndBodyDifferentThenShouldReturn400() throws Exception {
+    mockMvc.perform(put("/books/1111111111")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {"isbn": "2222222222", "title": "Title", "author": "Author", "price": 9.90}
+                """))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string("The ISBN in the path (1111111111) and in the body (2222222222) must match."));
+
+    verify(bookService, never()).editBookDetails(any(), any());
   }
 }

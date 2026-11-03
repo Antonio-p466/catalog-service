@@ -41,6 +41,9 @@ public class BookController {
 
   @PutMapping("{isbn}")
   public ResponseEntity<Book> put(@PathVariable String isbn, @Valid @RequestBody Book book) {
+    if (!isbn.equals(book.isbn())) {
+      throw new IsbnMismatchException(isbn, book.isbn());
+    }
     boolean exists = bookService.isInCatalog(isbn);
     Book saved = bookService.editBookDetails(isbn, book);
     return ResponseEntity.status(exists ? HttpStatus.OK : HttpStatus.CREATED).body(saved);

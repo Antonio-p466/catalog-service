@@ -28,4 +28,33 @@ class CatalogServiceApplicationTests {
           assertThat(actual.isbn()).isEqualTo(expected.isbn());
         });
   }
+
+  @Test
+  void whenPostGetPutDeleteThenBookIsGone() {
+    var isbn = "9876543210";
+    var book = new Book(isbn, "Title", "Author", 9.90);
+
+    webTestClient.post().uri("/books").bodyValue(book)
+        .exchange()
+        .expectStatus().isCreated();
+
+    webTestClient.get().uri("/books/" + isbn)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody(Book.class).value(actual -> assertThat(actual).isEqualTo(book));
+
+    var updated = new Book(isbn, "New Title", "Author", 12.50);
+    webTestClient.put().uri("/books/" + isbn).bodyValue(updated)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody(Book.class).value(actual -> assertThat(actual).isEqualTo(updated));
+
+    webTestClient.delete().uri("/books/" + isbn)
+        .exchange()
+        .expectStatus().isNoContent();
+
+    webTestClient.get().uri("/books/" + isbn)
+        .exchange()
+        .expectStatus().isNotFound();
+  }
 }

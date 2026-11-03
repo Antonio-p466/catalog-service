@@ -42,3 +42,10 @@ docs/api-demo.md has every one of these tried with curl.
 
 ## Commit stage
 .github/workflows/commit-stage.yml runs on every push. it builds the app, runs the tests, scans the dependencies with grype and puts the report in the Security tab.
+
+## Exercises
+E1. PUT gives back 201 now when the book wasnt there and 200 when it was. the controller asks the service if the isbn is already in the catalog, saves it, then picks the status. BookControllerMvcTests has a test for each case and docs/api-demo.md shows both with curl.
+
+E4. DELETE on a book that isnt there still gives 204 and i think thats right. DELETE is supposed to be idempotent, sending it once or ten times leaves the server the same way, with no book with that isbn. the client wanted it gone and it is gone, so a 404 would make the second delete look like it failed when nothing went wrong.
+
+E5. CatalogServiceApplicationTests has a test that does POST, GET, PUT, DELETE and then GET again on the same book against the real server, and the last GET has to be 404.

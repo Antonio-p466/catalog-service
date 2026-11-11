@@ -1,5 +1,7 @@
 package com.polarbookshop.catalogservice.web;
 
+import java.util.List;
+
 import com.polarbookshop.catalogservice.domain.Book;
 import com.polarbookshop.catalogservice.domain.BookAlreadyExistsException;
 import com.polarbookshop.catalogservice.domain.BookNotFoundException;
@@ -112,5 +114,29 @@ class BookControllerMvcTests {
         .andExpect(content().string("The ISBN in the path (1111111111) and in the body (2222222222) must match."));
 
     verify(bookService, never()).editBookDetails(any(), any());
+  }
+
+  @Test
+  void whenGetBooksByAuthorThenShouldReturnOnlyTheirBooks() throws Exception {
+    var book = Book.of("1234567891", "Northern Lights", "Lyra Silverstar", 9.90, "Polarsophia");
+    given(bookService.viewBooksByAuthor("Lyra Silverstar")).willReturn(List.of(book));
+
+    mockMvc.perform(get("/books").param("author", "Lyra Silverstar"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].author").value("Lyra Silverstar"));
+
+    verify(bookService, never()).viewBookList();
+  }
+
+  @Test
+  void whenGetBooksWithoutAuthorThenShouldReturnAll() throws Exception {
+    given(bookService.viewBookList()).willReturn(List.of());
+
+    mockMvc.perform(get("/books"))
+        .andExpect(status().isOk());
+
+    verify(bookService).viewBookList();
+    verify(bookService, never()).viewBooksByAuthor(any());
   }
 }

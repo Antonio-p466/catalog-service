@@ -97,4 +97,21 @@ class BookRepositoryJdbcTests {
 
     assertThat(bookRepository.findByIsbn("1234561244").get().publisher()).isNull();
   }
+
+  @Test
+  void findAllByAuthorReturnsOnlyThatAuthor() {
+    jdbcAggregateTemplate.insert(Book.of("1234561245", "Northern Lights", "Lyra Silverstar", 9.90, "Polarsophia"));
+    jdbcAggregateTemplate.insert(Book.of("1234561246", "Arctic Nights", "Lyra Silverstar", 14.50, "Polarsophia"));
+    jdbcAggregateTemplate.insert(Book.of("1234561247", "Polar Journey", "Iorek Polarson", 12.90, "Polarsophia"));
+
+    Iterable<Book> actual = bookRepository.findAllByAuthor("Lyra Silverstar");
+
+    assertThat(StreamSupport.stream(actual.spliterator(), false).map(Book::isbn))
+        .containsExactlyInAnyOrder("1234561245", "1234561246");
+  }
+
+  @Test
+  void findAllByAuthorWhenNoneMatch() {
+    assertThat(bookRepository.findAllByAuthor("Nobody")).isEmpty();
+  }
 }

@@ -15,6 +15,10 @@ public class BookService {
     return bookRepository.findAll();
   }
 
+  public Iterable<Book> viewBooksByAuthor(String author) {
+    return bookRepository.findAllByAuthor(author);
+  }
+
   public boolean isInCatalog(String isbn) {
     return bookRepository.existsByIsbn(isbn);
   }

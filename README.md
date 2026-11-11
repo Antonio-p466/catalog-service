@@ -38,7 +38,7 @@ the user and password in application.yml are only for the local container. a rea
 docs/config-demo.md shows the same jar run with a command line argument, a jvm property and an environment variable.
 
 ## How to use it
-- GET /books lists every book
+- GET /books lists every book, and GET /books?author=... only lists the books by that author
 - POST /books adds a book. if the isbn is already there you get 422, if something in the book is wrong you get 400 with what's wrong
 - GET /books/{isbn} gets one book, or 404 if there isnt one with that isbn
 - PUT /books/{isbn} changes the book, and if it doesnt exist yet it makes it
@@ -72,3 +72,5 @@ E5. CatalogServiceApplicationTests has a test that does POST, GET, PUT, DELETE a
 ## Practicum 2 exercises
 E1. V2__Add_publisher_column.sql adds a publisher column and Book has a publisher field now, Book.of takes it too. the column has to be nullable in this release. all the books already in the table dont have a publisher, so a not null column couldnt even be added. and while a new version rolls out the old version is still running next to it, the old code doesnt know about publisher and its inserts would fail if the column was required.
 to make it mandatory later i would do it in two releases. release 1 is this one, the column is nullable, the new code saves a publisher and i fill in the publisher for the old rows. release 2 only goes out once every instance runs release 1 and every row has a publisher, then a V3 migration sets it to not null and Book gets @NotBlank on publisher. that way no running version ever writes a row the database rejects.
+
+E2. GET /books?author=Lyra Silverstar gives back only the books by that author. BookRepository has findAllByAuthor, a derived query so spring data writes the sql from the method name, and the controller uses it when the author param is there and lists everything when its not. BookRepositoryJdbcTests checks it against postgres and BookControllerMvcTests checks the endpoint with and without the param.

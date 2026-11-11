@@ -11,6 +11,7 @@ public interface BookRepository extends CrudRepository<Book, Long> {
 
   Optional<Book> findByIsbn(String isbn);
   boolean existsByIsbn(String isbn);
+  Iterable<Book> findAllByAuthor(String author);
 
   @Modifying
   @Transactional

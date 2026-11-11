@@ -29,7 +29,7 @@ class BookRepositoryJdbcTests {
   @Test
   void findBookByIsbnWhenExisting() {
     var isbn = "1234561237";
-    var book = Book.of(isbn, "Title", "Author", 12.90);
+    var book = Book.of(isbn, "Title", "Author", 12.90, "Polarsophia");
     jdbcAggregateTemplate.insert(book);
 
     Optional<Book> actual = bookRepository.findByIsbn(isbn);
@@ -45,8 +45,8 @@ class BookRepositoryJdbcTests {
 
   @Test
   void findAllBooks() {
-    jdbcAggregateTemplate.insert(Book.of("1234561235", "Title", "Author", 12.90));
-    jdbcAggregateTemplate.insert(Book.of("1234561236", "Another Title", "Author", 9.90));
+    jdbcAggregateTemplate.insert(Book.of("1234561235", "Title", "Author", 12.90, "Polarsophia"));
+    jdbcAggregateTemplate.insert(Book.of("1234561236", "Another Title", "Author", 9.90, "Polarsophia"));
 
     Iterable<Book> actual = bookRepository.findAll();
 
@@ -56,7 +56,7 @@ class BookRepositoryJdbcTests {
 
   @Test
   void existsByIsbnWhenExisting() {
-    jdbcAggregateTemplate.insert(Book.of("1234561239", "Title", "Author", 12.90));
+    jdbcAggregateTemplate.insert(Book.of("1234561239", "Title", "Author", 12.90, "Polarsophia"));
 
     assertThat(bookRepository.existsByIsbn("1234561239")).isTrue();
   }
@@ -69,7 +69,7 @@ class BookRepositoryJdbcTests {
   @Test
   void deleteByIsbn() {
     var isbn = "1234561241";
-    jdbcAggregateTemplate.insert(Book.of(isbn, "Title", "Author", 12.90));
+    jdbcAggregateTemplate.insert(Book.of(isbn, "Title", "Author", 12.90, "Polarsophia"));
 
     bookRepository.deleteByIsbn(isbn);
 
@@ -78,9 +78,23 @@ class BookRepositoryJdbcTests {
 
   @Test
   void createdDateIsSetWhenSaved() {
-    var saved = bookRepository.save(Book.of("1234561242", "Title", "Author", 12.90));
+    var saved = bookRepository.save(Book.of("1234561242", "Title", "Author", 12.90, "Polarsophia"));
 
     assertThat(saved.createdDate()).isNotNull();
     assertThat(saved.lastModifiedDate()).isNotNull();
+  }
+
+  @Test
+  void publisherIsSavedWhenGiven() {
+    bookRepository.save(Book.of("1234561243", "Title", "Author", 12.90, "Polarsophia"));
+
+    assertThat(bookRepository.findByIsbn("1234561243").get().publisher()).isEqualTo("Polarsophia");
+  }
+
+  @Test
+  void publisherCanBeMissing() {
+    bookRepository.save(Book.of("1234561244", "Title", "Author", 12.90, null));
+
+    assertThat(bookRepository.findByIsbn("1234561244").get().publisher()).isNull();
   }
 }

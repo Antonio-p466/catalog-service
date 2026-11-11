@@ -68,3 +68,7 @@ E3. @ValidIsbn checks the real check digit. for ISBN-10 the digits get multiplie
 E4. DELETE on a book that isnt there still gives 204 and i think thats right. DELETE is supposed to be idempotent, sending it once or ten times leaves the server the same way, with no book with that isbn. the client wanted it gone and it is gone, so a 404 would make the second delete look like it failed when nothing went wrong.
 
 E5. CatalogServiceApplicationTests has a test that does POST, GET, PUT, DELETE and then GET again on the same book against the real server, and the last GET has to be 404.
+
+## Practicum 2 exercises
+E1. V2__Add_publisher_column.sql adds a publisher column and Book has a publisher field now, Book.of takes it too. the column has to be nullable in this release. all the books already in the table dont have a publisher, so a not null column couldnt even be added. and while a new version rolls out the old version is still running next to it, the old code doesnt know about publisher and its inserts would fail if the column was required.
+to make it mandatory later i would do it in two releases. release 1 is this one, the column is nullable, the new code saves a publisher and i fill in the publisher for the old rows. release 2 only goes out once every instance runs release 1 and every row has a publisher, then a V3 migration sets it to not null and Book gets @NotBlank on publisher. that way no running version ever writes a row the database rejects.

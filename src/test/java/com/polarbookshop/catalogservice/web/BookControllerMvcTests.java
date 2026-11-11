@@ -72,7 +72,7 @@ class BookControllerMvcTests {
   @Test
   void whenPutBookExistingThenShouldReturn200() throws Exception {
     String isbn = "7373731394";
-    var book = new Book(isbn, "Title", "Author", 12.50);
+    var book = Book.of(isbn, "Title", "Author", 12.50);
     given(bookService.isInCatalog(isbn)).willReturn(true);
     given(bookService.editBookDetails(any(), any())).willReturn(book);
 
@@ -88,7 +88,7 @@ class BookControllerMvcTests {
   @Test
   void whenPutBookNotExistingThenShouldReturn201() throws Exception {
     String isbn = "7373731394";
-    var book = new Book(isbn, "Title", "Author", 9.90);
+    var book = Book.of(isbn, "Title", "Author", 9.90);
     given(bookService.isInCatalog(isbn)).willReturn(false);
     given(bookService.editBookDetails(any(), any())).willReturn(book);
 

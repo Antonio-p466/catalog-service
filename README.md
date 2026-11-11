@@ -3,13 +3,15 @@
 [![Commit Stage](https://github.com/Antonio-p466/catalog-service/actions/workflows/commit-stage.yml/badge.svg)](https://github.com/Antonio-p466/catalog-service/actions/workflows/commit-stage.yml)
 
 Spring boot REST API for Polar Bookshop. It keeps the books in the catalog and lets you list them, look one up by isbn, and add, edit or delete them.
-there is no database yet, the books are kept in memory so they are gone when the app stops. a real database comes in a later practicum.
+the books are saved in postgres now so they stay after the app stops. the table is made by a flyway migration when the app starts.
+the root endpoint / gives back a welcome message that comes from the polar.greeting property, so it can be changed from outside without rebuilding.
 
 ## Team
 - Antonio Lee
 
 ## Requirements
 - Java 21
+- Docker, for the postgres container and for the tests
 - Spring Boot 3.5.16. start.spring.io only has 4.x now, so i generated it there and set the version to the newest 3.5.x in build.gradle
 
 ## Build and test
@@ -19,10 +21,21 @@ there is no database yet, the books are kept in memory so they are gone when the
 this also runs all the tests. the report is in build/reports/tests/test/index.html
 
 ## Run
+start postgres first
 ```
+docker run -d --name polar-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=polardb_catalog -p 5432:5432 postgres:17
 ./gradlew bootRun
 ```
 Then http://localhost:9001/books
+
+bootRun turns on the testdata profile so it starts with two sample books. java -jar on the built jar doesnt, so only the books you add are there.
+if something else is already using port 5432, like a postgres installed on the computer, map the container to another port and point the app at it with an environment variable instead of changing application.yml
+```
+docker run -d --name polar-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=polardb_catalog -p 5433:5432 postgres:17
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/polardb_catalog ./gradlew bootRun
+```
+the user and password in application.yml are only for the local container. a real deployment gives them with SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME and SPRING_DATASOURCE_PASSWORD.
+docs/config-demo.md shows the same jar run with a command line argument, a jvm property and an environment variable.
 
 ## How to use it
 - GET /books lists every book
@@ -35,15 +48,17 @@ a book needs an isbn with 10 or 13 digits, a title, an author and a price more t
 docs/api-demo.md has every one of these tried with curl.
 
 ## Project structure
-- com.polarbookshop.catalogservice.domain - Book, BookService, BookRepository and the two exceptions
-- com.polarbookshop.catalogservice.persistence - InMemoryBookRepository
-- com.polarbookshop.catalogservice.web - BookController and BookControllerAdvice
+- com.polarbookshop.catalogservice.domain - Book, BookService, BookRepository (spring data jdbc) and the exceptions
+- com.polarbookshop.catalogservice.config - PolarProperties for polar.* and DataConfig for auditing
+- com.polarbookshop.catalogservice.demo - BookDataLoader, the sample books for the testdata profile
+- com.polarbookshop.catalogservice.web - BookController, HomeController and BookControllerAdvice
+- src/main/resources/db/migration - the flyway migrations
 - src/test/java - validation unit tests, the full integration test, and the web and json slice tests
 
 ## Commit stage
 .github/workflows/commit-stage.yml runs on every push. it builds the app, runs the tests, scans the dependencies with grype and puts the report in the Security tab.
 
-## Exercises
+## Practicum 1 exercises
 E1. PUT gives back 201 now when the book wasnt there and 200 when it was. the controller asks the service if the isbn is already in the catalog, saves it, then picks the status. BookControllerMvcTests has a test for each case and docs/api-demo.md shows both with curl.
 
 E2. before, PUT /books/1111111111 with "isbn": "2222222222" in the body would save the book as 2222222222 but answer 201 for 1111111111, so the url pointed at a book that doesnt exist. thats not ok, the isbn in the url is the book you are talking about. now if the two dont match it gives 400 with a message saying they have to match, and nothing gets saved. BookControllerMvcTests has a test for it.

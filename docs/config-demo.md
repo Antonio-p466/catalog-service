@@ -33,3 +33,17 @@ with nothing passed in it uses the default from application.yml.
     Welcome to the catalog from CLI
 
 the command line argument wins. its at the top of spring's list, then jvm properties, then environment variables, then the profile files, then application.yml in the jar. so application.yml is only the default and anything passed in from outside beats it.
+
+exercise E3, turning on the sample books with a property instead of a profile
+
+BookDataLoader only loads when polar.testdata.enabled is true now. same jar both times, the only difference is the environment variable. polar.testdata.enabled becomes POLAR_TESTDATA_ENABLED
+
+    $ java -jar build/libs/catalog-service-0.0.1-SNAPSHOT.jar
+    $ curl localhost:9001/books
+    []
+
+    $ POLAR_TESTDATA_ENABLED=true java -jar build/libs/catalog-service-0.0.1-SNAPSHOT.jar
+    $ curl localhost:9001/books
+    the two sample books, Northern Lights and Polar Journey
+
+./gradlew bootRun sets polar.testdata.enabled=true itself so it still starts with the sample books like before.

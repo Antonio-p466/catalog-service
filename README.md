@@ -28,7 +28,7 @@ docker run -d --name polar-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=p
 ```
 Then http://localhost:9001/books
 
-bootRun turns on the testdata profile so it starts with two sample books. java -jar on the built jar doesnt, so only the books you add are there.
+bootRun sets polar.testdata.enabled=true so it starts with two sample books. java -jar on the built jar doesnt unless you pass POLAR_TESTDATA_ENABLED=true, so only the books you add are there.
 if something else is already using port 5432, like a postgres installed on the computer, map the container to another port and point the app at it with an environment variable instead of changing application.yml
 ```
 docker run -d --name polar-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=polardb_catalog -p 5433:5432 postgres:17
@@ -50,7 +50,7 @@ docs/api-demo.md has every one of these tried with curl.
 ## Project structure
 - com.polarbookshop.catalogservice.domain - Book, BookService, BookRepository (spring data jdbc) and the exceptions
 - com.polarbookshop.catalogservice.config - PolarProperties for polar.* and DataConfig for auditing
-- com.polarbookshop.catalogservice.demo - BookDataLoader, the sample books for the testdata profile
+- com.polarbookshop.catalogservice.demo - BookDataLoader, the sample books when polar.testdata.enabled is true
 - com.polarbookshop.catalogservice.web - BookController, HomeController and BookControllerAdvice
 - src/main/resources/db/migration - the flyway migrations
 - src/test/java - validation unit tests, the repository tests and full integration tests against postgres with testcontainers, and the web and json slice tests
@@ -74,3 +74,5 @@ E1. V2__Add_publisher_column.sql adds a publisher column and Book has a publishe
 to make it mandatory later i would do it in two releases. release 1 is this one, the column is nullable, the new code saves a publisher and i fill in the publisher for the old rows. release 2 only goes out once every instance runs release 1 and every row has a publisher, then a V3 migration sets it to not null and Book gets @NotBlank on publisher. that way no running version ever writes a row the database rejects.
 
 E2. GET /books?author=Lyra Silverstar gives back only the books by that author. BookRepository has findAllByAuthor, a derived query so spring data writes the sql from the method name, and the controller uses it when the author param is there and lists everything when its not. BookRepositoryJdbcTests checks it against postgres and BookControllerMvcTests checks the endpoint with and without the param.
+
+E3. BookDataLoader uses @ConditionalOnProperty on polar.testdata.enabled instead of @Profile("testdata"), and bootRun sets that property instead of the profile. its a plain on or off flag so it can be turned on without picking a profile, and on the packaged jar POLAR_TESTDATA_ENABLED=true turns it on. docs/config-demo.md shows the same jar with and without it.

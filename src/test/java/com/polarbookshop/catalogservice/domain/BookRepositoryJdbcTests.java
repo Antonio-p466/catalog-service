@@ -9,10 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.jdbc.core.JdbcAggregateTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJdbcTest
 @Import(DataConfig.class)
@@ -113,5 +115,21 @@ class BookRepositoryJdbcTests {
   @Test
   void findAllByAuthorWhenNoneMatch() {
     assertThat(bookRepository.findAllByAuthor("Nobody")).isEmpty();
+  }
+
+  @Test
+  void savingStaleCopyThrowsOptimisticLockingFailure() {
+    var isbn = "1234561248";
+    bookRepository.save(Book.of(isbn, "Title", "Author", 12.90, "Polarsophia"));
+    var first = bookRepository.findByIsbn(isbn).get();
+    var second = bookRepository.findByIsbn(isbn).get();
+
+    bookRepository.save(new Book(first.id(), first.isbn(), "New Title", first.author(), first.price(),
+        first.publisher(), first.createdDate(), first.lastModifiedDate(), first.version()));
+
+    var stale = new Book(second.id(), second.isbn(), "Other Title", second.author(), second.price(),
+        second.publisher(), second.createdDate(), second.lastModifiedDate(), second.version());
+    assertThatThrownBy(() -> bookRepository.save(stale))
+        .isInstanceOf(OptimisticLockingFailureException.class);
   }
 }

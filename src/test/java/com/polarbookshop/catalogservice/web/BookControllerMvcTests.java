@@ -9,6 +9,7 @@ import com.polarbookshop.catalogservice.domain.BookService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -138,5 +139,21 @@ class BookControllerMvcTests {
 
     verify(bookService).viewBookList();
     verify(bookService, never()).viewBooksByAuthor(any());
+  }
+
+  @Test
+  void whenPutBookChangedAtSameTimeThenShouldReturn409() throws Exception {
+    String isbn = "7373731394";
+    given(bookService.isInCatalog(isbn)).willReturn(true);
+    given(bookService.editBookDetails(any(), any()))
+        .willThrow(new OptimisticLockingFailureException("stale version"));
+
+    mockMvc.perform(put("/books/" + isbn)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {"isbn": "7373731394", "title": "Title", "author": "Author", "price": 9.90}
+                """))
+        .andExpect(status().isConflict())
+        .andExpect(content().string("The book was changed by someone else at the same time, get it again and retry."));
   }
 }

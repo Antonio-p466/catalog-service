@@ -18,7 +18,7 @@ the root endpoint / gives back a welcome message that comes from the polar.greet
 ```
 ./gradlew build
 ```
-this also runs all the tests. the report is in build/reports/tests/test/index.html
+this also runs all the tests. docker has to be running because the repository and integration tests start their own postgres container with testcontainers, so you dont need the polar-postgres one for the tests. the report is in build/reports/tests/test/index.html
 
 ## Run
 start postgres first
@@ -53,7 +53,7 @@ docs/api-demo.md has every one of these tried with curl.
 - com.polarbookshop.catalogservice.demo - BookDataLoader, the sample books for the testdata profile
 - com.polarbookshop.catalogservice.web - BookController, HomeController and BookControllerAdvice
 - src/main/resources/db/migration - the flyway migrations
-- src/test/java - validation unit tests, the full integration test, and the web and json slice tests
+- src/test/java - validation unit tests, the repository tests and full integration tests against postgres with testcontainers, and the web and json slice tests
 
 ## Commit stage
 .github/workflows/commit-stage.yml runs on every push. it builds the app, runs the tests, scans the dependencies with grype and puts the report in the Security tab.

@@ -87,3 +87,6 @@ E2. GET /books?author=Lyra Silverstar gives back only the books by that author. 
 E3. BookDataLoader uses @ConditionalOnProperty on polar.testdata.enabled instead of @Profile("testdata"), and bootRun sets that property instead of the profile. its a plain on or off flag so it can be turned on without picking a profile, and on the packaged jar POLAR_TESTDATA_ENABLED=true turns it on. docs/config-demo.md shows the same jar with and without it.
 
 E4. BookRepositoryJdbcTests loads the same book twice, saves a change through the first copy so the version goes up, and then saving the second copy with the old version throws OptimisticLockingFailureException instead of quietly writing over the first change. BookControllerAdvice turns that exception into 409 Conflict with a message to get the book again and retry, and BookControllerMvcTests checks the 409.
+
+## Practicum 3 exercises
+E1. the database check is in the readiness group now, management.endpoint.health.group.readiness.include: readinessState,db. when postgres is down the pods turn not ready and get no traffic instead of being restarted. i tried it in the liveness group too and both replicas got restarted at once and crash looped. the whole run and why readiness is the right place is in docs/kubernetes.md in polar-deployment.

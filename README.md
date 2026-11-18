@@ -58,6 +58,15 @@ docs/api-demo.md has every one of these tried with curl.
 ## Commit stage
 .github/workflows/commit-stage.yml runs on every push. it builds the app, runs the tests, scans the dependencies with grype and puts the report in the Security tab.
 
+## Practicum 3
+- the image is built with buildpacks, ./gradlew bootBuildImage. theres also a layered Dockerfile from step 1.1 that runs as a non root user, ./gradlew bootJar then docker build -t catalog-service:dockerfile .
+- the commit stage checks the k8s manifests with kubeconform, and on main it builds the image, scans it and publishes it to ghcr.io/antonio-p466/catalog-service:latest
+- k8s/ has the deployment and service. with minikube running and polar-deployment's platform services applied, tilt up builds, deploys and forwards 9001
+- its a resource server now. GET on /books and / is open, everything else needs a token from keycloak with the employee role. no token is 401, a token without employee is 403
+- createdBy and lastModifiedBy are filled from the token, V3 adds those columns
+- the keycloak issuer is http://polar-keycloak:8080/realms/PolarBookshop, so to call it from your own computer polar-keycloak has to point to 127.0.0.1 in /etc/hosts
+- the tests start postgres and keycloak with testcontainers, so docker has to be running
+
 ## Practicum 1 exercises
 E1. PUT gives back 201 now when the book wasnt there and 200 when it was. the controller asks the service if the isbn is already in the catalog, saves it, then picks the status. BookControllerMvcTests has a test for each case and docs/api-demo.md shows both with curl.
 

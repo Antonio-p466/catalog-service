@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.data.jdbc.core.JdbcAggregateTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -125,11 +126,28 @@ class BookRepositoryJdbcTests {
     var second = bookRepository.findByIsbn(isbn).get();
 
     bookRepository.save(new Book(first.id(), first.isbn(), "New Title", first.author(), first.price(),
-        first.publisher(), first.createdDate(), first.lastModifiedDate(), first.version()));
+        first.publisher(), first.createdDate(), first.lastModifiedDate(), first.createdBy(),
+        first.lastModifiedBy(), first.version()));
 
     var stale = new Book(second.id(), second.isbn(), "Other Title", second.author(), second.price(),
-        second.publisher(), second.createdDate(), second.lastModifiedDate(), second.version());
+        second.publisher(), second.createdDate(), second.lastModifiedDate(), second.createdBy(),
+        second.lastModifiedBy(), second.version());
     assertThatThrownBy(() -> bookRepository.save(stale))
         .isInstanceOf(OptimisticLockingFailureException.class);
+  }
+
+  @Test
+  void whenCreateBookNotAuthenticatedThenNoAuditMetadata() {
+    var created = bookRepository.save(Book.of("1232343456", "Title", "Author", 12.90, "Polarsophia"));
+    assertThat(created.createdBy()).isNull();
+    assertThat(created.lastModifiedBy()).isNull();
+  }
+
+  @Test
+  @WithMockUser("john")
+  void whenCreateBookAuthenticatedThenAuditMetadata() {
+    var created = bookRepository.save(Book.of("1232343457", "Title", "Author", 12.90, "Polarsophia"));
+    assertThat(created.createdBy()).isEqualTo("john");
+    assertThat(created.lastModifiedBy()).isEqualTo("john");
   }
 }

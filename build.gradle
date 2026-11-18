@@ -40,3 +40,8 @@ bootRun {
 }
 
 tasks.named('jar') { enabled = false }
+
+bootBuildImage {
+	imageName = "${project.name}"
+	environment = ["BP_JVM_VERSION": "21"]
+}

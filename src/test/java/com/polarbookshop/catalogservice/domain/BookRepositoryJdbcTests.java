@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.data.jdbc.core.JdbcAggregateTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,6 +30,9 @@ class BookRepositoryJdbcTests {
 
   @Autowired
   private JdbcAggregateTemplate jdbcAggregateTemplate;
+
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
 
   @Test
   void findBookByIsbnWhenExisting() {
@@ -149,5 +154,13 @@ class BookRepositoryJdbcTests {
     var created = bookRepository.save(Book.of("1232343457", "Title", "Author", 12.90, "Polarsophia"));
     assertThat(created.createdBy()).isEqualTo("john");
     assertThat(created.lastModifiedBy()).isEqualTo("john");
+  }
+
+  @Test
+  void whenRowHasNoAuditorThenDatabaseRejectsIt() {
+    assertThatThrownBy(() -> jdbcTemplate.update(
+        "insert into book (author, isbn, price, title, created_date, last_modified_date, version) "
+            + "values ('Author', '1232343458', 12.90, 'Title', now(), now(), 1)"))
+        .isInstanceOf(DataIntegrityViolationException.class);
   }
 }

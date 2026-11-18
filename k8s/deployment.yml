@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  labels: { app: catalog-service }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: catalog-service }
+  template:
+    metadata:
+      labels: { app: catalog-service }
+    spec:
+      containers:
+        - name: catalog-service
+          image: catalog-service
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9001
+          env:
+            - { name: BPL_JVM_THREAD_COUNT, value: "50" }
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://polar-postgres/polardb_catalog
+            - { name: POLAR_TESTDATA_ENABLED, value: "true" }
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits: { memory: 768Mi }
+          lifecycle:
+            preStop:
+              sleep: { seconds: 5 }
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: 9001 }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: 9001 }
+            initialDelaySeconds: 20
+            periodSeconds: 5

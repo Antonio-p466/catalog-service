@@ -137,10 +137,10 @@ class BookRepositoryJdbcTests {
   }
 
   @Test
-  void whenCreateBookNotAuthenticatedThenNoAuditMetadata() {
+  void whenCreateBookNotAuthenticatedThenAuditorIsUnknown() {
     var created = bookRepository.save(Book.of("1232343456", "Title", "Author", 12.90, "Polarsophia"));
-    assertThat(created.createdBy()).isNull();
-    assertThat(created.lastModifiedBy()).isNull();
+    assertThat(created.createdBy()).isEqualTo("unknown");
+    assertThat(created.lastModifiedBy()).isEqualTo("unknown");
   }
 
   @Test

@@ -90,3 +90,8 @@ E4. BookRepositoryJdbcTests loads the same book twice, saves a change through th
 
 ## Practicum 3 exercises
 E1. the database check is in the readiness group now, management.endpoint.health.group.readiness.include: readinessState,db. when postgres is down the pods turn not ready and get no traffic instead of being restarted. i tried it in the liveness group too and both replicas got restarted at once and crash looped. the whole run and why readiness is the right place is in docs/kubernetes.md in polar-deployment.
+
+E3. created_by and last_modified_by become not null in two releases.
+release 1 is V4__Fill_user_audit.sql, it sets 'unknown' on every row that has no auditor yet, and the auditor in DataConfig now gives "unknown" when nobody is logged in (like the testdata loader) instead of nothing, so this version never writes a null. the columns are still nullable in this release.
+release 2 is V5__Make_user_audit_not_null.sql, it adds the not null constraint. it only ships after every instance runs release 1 and the old rows are filled.
+doing both in one release would break a rolling upgrade. during the rollout the old version is still running next to the new one against the same database, and the migration runs as soon as the first new pod starts. the old version doesnt always write these columns, a version from before V3 doesnt even know they exist, so every insert it does after the constraint is added fails and its requests break until the rollout is done. you also couldnt roll back to the old version anymore. with two releases the database only gets the rule once nothing running can break it.

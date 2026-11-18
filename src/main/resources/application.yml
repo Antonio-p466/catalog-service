@@ -13,6 +13,11 @@ spring:
     name: catalog-service
   lifecycle:
     timeout-per-shutdown-phase: 15s
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://polar-keycloak:8080/realms/PolarBookshop
   datasource:
     url: jdbc:postgresql://localhost:5432/polardb_catalog
     username: user

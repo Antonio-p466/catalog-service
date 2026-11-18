@@ -29,6 +29,11 @@ jobs:
           chmod +x gradlew
           ./gradlew build
 
+      - name: Validate Kubernetes manifests
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -summary k8s
+
       - name: Code vulnerability scanning
         uses: anchore/scan-action@v7
         id: scan
